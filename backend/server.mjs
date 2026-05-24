@@ -7,7 +7,7 @@ import path from 'path';
 import os from 'os';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -230,4 +230,18 @@ app.get('/api/history', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ VaultDL backend v2.4.0 running at http://localhost:${PORT}`);
   console.log(`📁 Settings: ${SETTINGS_FILE}`);
+
+  // ── Keep-alive: ping self every 4 min to prevent Render free tier sleep ──
+  const SELF_URL = process.env.RENDER_EXTERNAL_URL;
+  if (SELF_URL) {
+    setInterval(async () => {
+      try {
+        await fetch(`${SELF_URL}/api/health`);
+        console.log(`[keep-alive] pinged at ${new Date().toISOString()}`);
+      } catch (e) {
+        console.warn('[keep-alive] ping failed:', e.message);
+      }
+    }, 4 * 60 * 1000);
+    console.log(`[keep-alive] active → ${SELF_URL}/api/health`);
+  }
 });

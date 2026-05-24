@@ -1,92 +1,117 @@
 import { useNavigate } from "react-router";
 import { Download, Folder, Terminal } from "lucide-react";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Switch } from "../components/ui/switch";
 
 export function SetupPage() {
   const navigate = useNavigate();
 
-  const handleSetup = () => {
-    navigate("/dashboard");
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]">
-      <Card className="w-full max-w-[480px] p-9 rounded-[20px]">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[rgb(4_4_6)]"
+      style={{
+        backgroundImage: `radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 60%),
+          url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=")`
+      }}
+    >
+      <div className="w-full max-w-[460px] bg-[rgb(7_7_10)] border border-white/[0.07] rounded-2xl p-9">
+
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-6">
           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-            <Download className="w-5 h-5 text-black" />
+            <Download className="w-4 h-4 text-black" strokeWidth={2.5} />
           </div>
-          <span className="mono font-semibold text-lg text-white">VaultDL</span>
+          <span className="mono font-semibold text-[15px] text-white tracking-tight">VaultDL</span>
         </div>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-[10px] font-medium uppercase tracking-[1.5px] text-muted-foreground/60 mb-2">
-            FIRST TIME SETUP
+          <div className="text-[9px] font-semibold uppercase tracking-[1.8px] text-white/20 mb-2">
+            First Time Setup
           </div>
-          <h2 className="text-2xl font-medium text-white">Configure your workspace</h2>
+          <h2 className="text-[20px] font-medium text-white">Configure your workspace</h2>
         </div>
 
         {/* Form */}
         <div className="space-y-4 mb-6">
+
+          {/* Video Path */}
           <div>
-            <Label className="text-[11px] font-medium uppercase tracking-[1.5px] text-muted-foreground/60">
+            <div className="text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25 mb-2">
               Video Save Path
-            </Label>
-            <div className="flex gap-2 mt-2">
-              <Input defaultValue="~/Downloads/VaultDL/Videos" className="flex-1 mono" />
-              <Button variant="outline" size="icon" className="w-10 h-10 flex-shrink-0">
-                <Folder className="w-4 h-4" />
-              </Button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                defaultValue="~/Downloads/VaultDL/Videos"
+                className="flex-1 h-9 px-3 rounded-lg bg-[rgb(9_9_12)] border border-white/[0.07] text-[12px] mono text-white/60 focus:outline-none focus:border-white/20 transition-colors"
+              />
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/[0.07] bg-[rgb(9_9_12)] text-white/30 hover:text-white/60 hover:border-white/15 transition-all shrink-0">
+                <Folder className="w-3.5 h-3.5" strokeWidth={1.5} />
+              </button>
             </div>
           </div>
 
+          {/* Audio Path */}
           <div>
-            <Label className="text-[11px] font-medium uppercase tracking-[1.5px] text-muted-foreground/60">
+            <div className="text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25 mb-2">
               Audio Save Path
-            </Label>
-            <div className="flex gap-2 mt-2">
-              <Input defaultValue="~/Downloads/VaultDL/Audio" className="flex-1 mono" />
-              <Button variant="outline" size="icon" className="w-10 h-10 flex-shrink-0">
-                <Folder className="w-4 h-4" />
-              </Button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                defaultValue="~/Downloads/VaultDL/Audio"
+                className="flex-1 h-9 px-3 rounded-lg bg-[rgb(9_9_12)] border border-white/[0.07] text-[12px] mono text-white/60 focus:outline-none focus:border-white/20 transition-colors"
+              />
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/[0.07] bg-[rgb(9_9_12)] text-white/30 hover:text-white/60 hover:border-white/15 transition-all shrink-0">
+                <Folder className="w-3.5 h-3.5" strokeWidth={1.5} />
+              </button>
             </div>
           </div>
 
+          {/* yt-dlp Path */}
           <div>
-            <Label className="text-[11px] font-medium uppercase tracking-[1.5px] text-muted-foreground/60">
+            <div className="text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25 mb-2">
               yt-dlp Binary Path
-            </Label>
-            <div className="flex gap-2 mt-2">
-              <Input placeholder="/usr/local/bin/yt-dlp" className="flex-1 mono" />
-              <Button variant="outline" size="icon" className="w-10 h-10 flex-shrink-0">
-                <Terminal className="w-4 h-4" />
-              </Button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                placeholder="/usr/local/bin/yt-dlp"
+                className="flex-1 h-9 px-3 rounded-lg bg-[rgb(9_9_12)] border border-white/[0.07] text-[12px] mono text-white/60 placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-colors"
+              />
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/[0.07] bg-[rgb(9_9_12)] text-white/30 hover:text-white/60 hover:border-white/15 transition-all shrink-0">
+                <Terminal className="w-3.5 h-3.5" strokeWidth={1.5} />
+              </button>
             </div>
           </div>
 
           {/* Toggle */}
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-sm text-muted-foreground">Auto-update yt-dlp on launch</span>
-            <Switch defaultChecked />
+          <div className="flex items-center justify-between pt-2 px-1">
+            <span className="text-[12px] text-white/40">Auto-update yt-dlp on launch</span>
+            <div
+              className="w-9 h-5 rounded-full bg-white/[0.08] border border-white/[0.10] relative cursor-pointer hover:bg-white/[0.12] transition-colors"
+              onClick={(e) => {
+                const el = e.currentTarget;
+                el.classList.toggle("bg-emerald-500/30");
+                el.classList.toggle("border-emerald-500/40");
+                const dot = el.querySelector("span") as HTMLElement;
+                dot.style.transform = dot.style.transform === "translateX(16px)" ? "" : "translateX(16px)";
+              }}
+            >
+              <span className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white/40 transition-transform duration-200" />
+            </div>
           </div>
         </div>
 
-        {/* Submit Button */}
-        <Button onClick={handleSetup} className="w-full h-12 mb-4">
-          Launch VaultDL →
-        </Button>
+        {/* Submit */}
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="w-full h-11 rounded-xl bg-white text-black text-[13px] font-semibold hover:bg-white/90 transition-all mb-4 flex items-center justify-center gap-2"
+        >
+          Launch VaultDL
+          <span className="text-black/50">→</span>
+        </button>
 
-        {/* Footer Note */}
-        <p className="text-[10px] mono text-muted-foreground/60 text-center">
+        {/* Footer */}
+        <p className="text-[10px] mono text-white/20 text-center">
           All settings editable later in Settings
         </p>
-      </Card>
+      </div>
     </div>
   );
 }

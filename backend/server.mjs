@@ -64,7 +64,7 @@ app.post('/api/info', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'URL required' });
 
   try {
-    const child = exec(`yt-dlp --dump-json --no-playlist "${url}"`);
+    const child = exec(`yt-dlp --dump-json --no-playlist --extractor-args "youtube:player_client=web,mweb" "${url}"`);
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', d => stdout += d);
@@ -132,17 +132,18 @@ app.post('/api/download', (req, res) => {
   if (!fs.existsSync(resolvedPath)) fs.mkdirSync(resolvedPath, { recursive: true });
 
   const speedFlag = appSettings.speedLimit ? `--limit-rate ${appSettings.speedLimit}` : '';
+  const ytArgs = `--extractor-args "youtube:player_client=web,mweb"`;
 
   let cmd = '';
   if (type === 'audio') {
-    cmd = `yt-dlp -x --audio-format ${format === 'mp3' ? 'mp3' : 'best'} --no-playlist --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    cmd = `yt-dlp -x --audio-format ${format === 'mp3' ? 'mp3' : 'best'} --no-playlist ${ytArgs} --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else if (type === 'thumbnail') {
-    cmd = `yt-dlp --write-thumbnail --skip-download --no-playlist --newline -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    cmd = `yt-dlp --write-thumbnail --skip-download --no-playlist ${ytArgs} --newline -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else {
     const qualityFlag = quality === 'best'
       ? 'bestvideo+bestaudio/best'
       : `bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]`;
-    cmd = `yt-dlp -f "${qualityFlag}" --no-playlist --merge-output-format ${format} --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    cmd = `yt-dlp -f "${qualityFlag}" --no-playlist ${ytArgs} --merge-output-format ${format} --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   }
 
   const child = exec(cmd);
@@ -231,7 +232,6 @@ app.listen(PORT, () => {
   console.log(`✅ VaultDL backend v2.4.0 running at http://localhost:${PORT}`);
   console.log(`📁 Settings: ${SETTINGS_FILE}`);
 
-  // ── Keep-alive: ping self every 4 min to prevent Render free tier sleep ──
   const SELF_URL = process.env.RENDER_EXTERNAL_URL;
   if (SELF_URL) {
     setInterval(async () => {

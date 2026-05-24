@@ -14,7 +14,7 @@ export function DashboardLayout() {
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch("http://localhost:3000/api/health");
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/health`);
         setBackendOnline(res.ok);
       } catch {
         setBackendOnline(false);
@@ -226,7 +226,7 @@ export function DashboardLayout() {
                 "mono text-[10px]",
                 backendOnline === false ? "text-red-400/60" : "text-white/25"
               )}>
-                {backendOnline === false ? "backend offline" : "localhost:3000"}
+                {backendOnline === false ? "backend offline" : "backend online"}
               </span>
             </div>
           </div>

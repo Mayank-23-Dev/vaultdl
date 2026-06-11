@@ -1,0 +1,6 @@
+{
+  "version": "0.0.11",
+  "releaseDate": "2026-06-11",
+  "notes": "Fixed subtitle embedding to ensure no external .srt file is left behind after compilation.",
+  "downloadUrl": "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/download/v0.0.11/VaultDLSetup0.0.11.exe"
+}

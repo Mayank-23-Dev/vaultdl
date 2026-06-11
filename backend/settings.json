@@ -1,0 +1,16 @@
+{
+  "videoPath": "C:\\Users\\LOQ\\Downloads\\VaultDL\\Videos",
+  "audioPath": "C:\\Users\\LOQ\\Downloads\\VaultDL\\Audio",
+  "thumbnailPath": "C:\\Users\\LOQ\\Downloads\\VaultDL\\Thumbnails",
+  "autoUpdateYtdlp": true,
+  "saveThumbnails": false,
+  "autoMerge": true,
+  "embedSubtitles": true,
+  "concurrentDownloads": "3",
+  "speedLimit": "",
+  "retryAttempts": "3",
+  "useCookies": false,
+  "useSocks5": false,
+  "proxyAddress": "",
+  "userAgent": ""
+}

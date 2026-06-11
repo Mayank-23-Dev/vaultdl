@@ -1,0 +1,6 @@
+npm run dev
+
+
+
+cd backend
+node server.mjs

@@ -44,7 +44,7 @@ function loadSettings() {
     autoUpdateYtdlp: true,
     saveThumbnails: false,
     autoMerge: true,
-    embedSubtitles: false,
+    embedSubtitles: true,
     concurrentDownloads: '3',
     speedLimit: '',
     retryAttempts: '3',

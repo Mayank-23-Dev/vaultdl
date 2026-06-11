@@ -1,6 +1,6 @@
 {
   "version": "0.0.11",
   "releaseDate": "2026-06-11",
-  "notes": "Fixed subtitle embedding to ensure no external .srt file is left behind after compilation.",
+  "notes": "Final v0.0.11 release: Cleaned up sidebar scrollbars, enabled subtitles by default, disabled thumbnails by default, and improved multi-audio engine.",
   "downloadUrl": "https://github.com/Mayank-23-Dev/vaultdl/releases/download/v0.0.11/VaultDLSetup0.0.11.exe"
 }

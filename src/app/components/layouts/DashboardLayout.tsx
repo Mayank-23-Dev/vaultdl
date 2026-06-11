@@ -257,7 +257,7 @@ export function DashboardLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto no-scrollbar">
           <Outlet />
         </main>
       </div>

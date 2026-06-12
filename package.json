@@ -2,13 +2,17 @@
   "name": "vaultdl",
   "private": true,
   "version": "0.0.11",
+  "author": {
+    "name": "VaultDL Team",
+    "email": "contact@vaultdl.app"
+  },
   "type": "module",
   "main": "electron.cjs",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
     "electron": "electron .",
-    "build-exe": "vite build && electron-builder --win --x64"
+    "build-win": "vite build && electron-builder --win --x64"
   },
   "build": {
     "productName": "VaultDL",
@@ -17,13 +21,8 @@
     "icon": "icon.png",
     "files": [
       "dist/**",
-      "backend/**",
       "electron.cjs",
       "preload.cjs"
-    ],
-    "extraResources": [
-      "yt-dlp.exe",
-      "ffmpeg.exe"
     ],
     "win": {
       "target": [
@@ -41,7 +40,21 @@
         }
       ],
       "requestedExecutionLevel": "asInvoker",
-      "icon": "icon.png"
+      "icon": "public/icons/win/icon.ico",
+      "extraResources": [
+        {
+          "from": "backend",
+          "to": "backend"
+        },
+        {
+          "from": "yt-dlp.exe",
+          "to": "yt-dlp.exe"
+        },
+        {
+          "from": "ffmpeg.exe",
+          "to": "ffmpeg.exe"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

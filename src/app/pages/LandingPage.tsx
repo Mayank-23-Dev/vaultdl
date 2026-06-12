@@ -1,7 +1,15 @@
 import { Link } from "react-router";
 import { Download, Shield, Server, Github, Video, Music, Image as ImageIcon, ArrowRight, Zap, Lock, Globe } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchHealth } from "../lib/api";
 
 export function LandingPage() {
+  const [ytdlpVersion, setYtdlpVersion] = useState<string>("loading...");
+
+  useEffect(() => {
+    fetchHealth().then(data => setYtdlpVersion(data.ytdlp)).catch(() => setYtdlpVersion("offline"));
+  }, []);
+
   return (
     <div className="min-h-screen bg-[rgb(6_6_8)] text-white overflow-x-hidden">
 
@@ -56,7 +64,7 @@ export function LandingPage() {
           {/* pill badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] mono text-[10px] text-white/40 mb-8 uppercase tracking-[1.2px]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            yt-dlp 2024.11 · 4K HDR supported
+            yt-dlp {ytdlpVersion} · 4K HDR supported
           </div>
 
           {/* headline */}
@@ -122,7 +130,7 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               {
                 Icon: Video,

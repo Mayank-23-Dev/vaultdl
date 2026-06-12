@@ -4,6 +4,9 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 
+// Prevents SmartScreen from flagging auto-launched processes
+app.commandLine.appendSwitch('no-sandbox');
+
 let backendProcess
 
 const isDev = !app.isPackaged;

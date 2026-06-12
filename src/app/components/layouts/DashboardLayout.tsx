@@ -4,20 +4,24 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { cn } from "../ui/utils";
 import { useQueue } from "../../lib/QueueContext";
 import { useEffect, useState } from "react";
+import { fetchHealth } from "../../lib/api";
 
 export function DashboardLayout() {
   const { items, activeCount } = useQueue();
   const queueCount = items.length;
   const location = useLocation();
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+  const [ytdlpVersion, setYtdlpVersion] = useState<string>("loading...");
 
   useEffect(() => {
     async function check() {
       try {
-        const res = await fetch("http://127.0.0.1:3000/api/health");
-        setBackendOnline(res.ok);
+        const data = await fetchHealth();
+        setBackendOnline(true);
+        setYtdlpVersion(data.ytdlp || "unknown");
       } catch {
         setBackendOnline(false);
+        setYtdlpVersion("offline");
       }
     }
     check();
@@ -163,7 +167,7 @@ export function DashboardLayout() {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_4px_rgba(52,211,153,0.6)]" />
                   <span className="text-[11px] mono text-white/30">yt-dlp</span>
                 </div>
-                <span className="text-[10px] mono text-white/20">2024.11.4</span>
+                <span className="text-[10px] mono text-white/20">{ytdlpVersion}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

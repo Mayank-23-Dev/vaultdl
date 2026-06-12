@@ -186,3 +186,15 @@ export async function updateSettings(settings: Settings): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to update settings');
 }
+
+export interface HealthInfo {
+  status: string;
+  version: string;
+  ytdlp: string;
+}
+
+export async function fetchHealth(): Promise<HealthInfo> {
+  const res = await fetch(`${BASE_URL}/health`);
+  if (!res.ok) throw new Error('Failed to fetch health');
+  return res.json();
+}

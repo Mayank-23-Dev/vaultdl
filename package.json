@@ -10,30 +10,48 @@
     "electron": "electron .",
     "build-exe": "vite build && electron-builder --win --x64"
   },
- "build": {
-   "productName": "VaultDL",
-   "appId": "com.vaultdl.app",
-   "artifactName": "${productName}Setup${version}.${ext}",
-   "icon": "icon.png",
-   "files": [
-     "dist/**",
-     "backend/**",
-     "electron.cjs",
-     "preload.cjs"
-   ],
-
-  "extraResources": ["yt-dlp.exe", "ffmpeg.exe"],
-  "win": {
-    "target": [
-      "nsis"
+  "build": {
+    "productName": "VaultDL",
+    "appId": "com.vaultdl.app",
+    "artifactName": "${productName}Setup${version}.${ext}",
+    "icon": "icon.png",
+    "files": [
+      "dist/**",
+      "backend/**",
+      "electron.cjs",
+      "preload.cjs"
     ],
-    "icon": "icon.png"
+    "extraResources": [
+      "yt-dlp.exe",
+      "ffmpeg.exe"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "installerIcon": "public/icons/win/icon.ico",
+      "uninstallerIcon": "public/icons/win/icon.ico"
+    }
   },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true
-  }
-},
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

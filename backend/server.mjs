@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 const YT_DLP = process.env.YT_DLP_PATH || path.join(process.cwd(), 'yt-dlp.exe');
 const FFMPEG = process.env.FFMPEG_PATH || path.join(process.cwd(), 'ffmpeg.exe');
 
+let ytdlpVersion = 'loading...';
+
 console.log(`[Backend] YT_DLP path: ${YT_DLP}`);
 console.log(`[Backend] FFMPEG path: ${FFMPEG}`);
 
@@ -24,6 +26,10 @@ const HISTORY_FILE = path.join(process.cwd(), 'history.json');
 function checkBinaries() {
   if (!fs.existsSync(YT_DLP) && YT_DLP !== 'yt-dlp') {
     console.warn(`⚠️  yt-dlp not found at ${YT_DLP}. Falling back to system 'yt-dlp'.`);
+  } else {
+    exec(`"${YT_DLP}" --version`, (err, stdout) => {
+      if (!err && stdout) ytdlpVersion = stdout.trim();
+    });
   }
   if (!fs.existsSync(FFMPEG) && FFMPEG !== 'ffmpeg') {
     console.warn(`⚠️  ffmpeg not found at ${FFMPEG}. Falling back to system 'ffmpeg'.`);
@@ -103,7 +109,7 @@ function updateYtdlp() {
 updateYtdlp();
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '0.0.11' });
+  res.json({ status: 'ok', version: '0.0.11', ytdlp: ytdlpVersion });
 });
 
 app.get('/api/check-update', async (req, res) => {
@@ -229,7 +235,7 @@ app.post('/api/info', async (req, res) => {
           });
         };
         processSubs(info.subtitles, false);
-        processSubs(info.automatic_captions, true);
+        // Only real subtitles — no auto-generated captions
         const subtitles = Array.from(subMap.values());
 
         res.json({
@@ -288,9 +294,9 @@ app.post('/api/download', (req, res) => {
   
   // Subtitles
   let subFlag = '';
-  if (subtitle_lang === 'all') {
+  if (subtitle_lang === 'embed-all') {
     subFlag = '--all-subs --embed-subs --convert-subs srt';
-  } else if (subtitle_lang && subtitle_lang !== 'none') {
+  } else if (subtitle_lang && subtitle_lang !== 'none' && subtitle_lang !== '') {
     subFlag = `--embed-subs --sub-langs "${subtitle_lang}" --convert-subs srt`;
   } else if (appSettings.embedSubtitles) {
     subFlag = '--embed-subs --sub-langs "en.*" --convert-subs srt';
@@ -322,9 +328,7 @@ app.post('/api/download', (req, res) => {
     let formatSelector = '';
     const qHeight = quality === 'best' ? '9999' : quality;
     
-    if (audio_lang === 'all') {
-      formatSelector = `bestvideo[height<=${qHeight}]+bestaudio[language=original]+bestaudio[language=en]+bestaudio[language=es]+bestaudio[language=hi]+bestaudio[language=fr]+bestaudio[language=ar]/bestvideo+bestaudio/best`;
-    } else if (audio_lang && audio_lang !== 'original') {
+    if (audio_lang && audio_lang !== 'original') {
       // YouTube dubs: Check for pre-multiplexed first, then explicitly use audio_track_id or language
       formatSelector = `best[height<=${qHeight}][audio_track_id=${audio_lang}]/best[height<=${qHeight}][language=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[audio_track_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[language=${audio_lang}]/bestvideo+bestaudio/best`;
     } else {

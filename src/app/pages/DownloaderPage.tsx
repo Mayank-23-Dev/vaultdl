@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQueue } from "../lib/QueueContext";
 import {
   Download, Video, Music, Image as ImageIcon, Youtube,
-  Check, ArrowRight, FileVideo, Instagram, Loader2, AlertCircle, Zap, ImageDown, Copy
+  Check, ArrowRight, FileVideo, Instagram, Loader2, AlertCircle, Zap, ImageDown, Captions
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -21,6 +21,79 @@ import {
 } from "../lib/api";
 
 /* ─── tiny helpers ─────────────────────────────────────────────────────── */
+function CustomSelect({
+  label,
+  icon,
+  value,
+  onChange,
+  options,
+  placeholder = "Select..."
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string; accent?: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-1.5 relative" ref={containerRef}>
+      <label className="text-[10px] text-white/30 uppercase tracking-[1.4px] font-mono flex items-center gap-1.5">
+        {icon} {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-[13px] text-white/70 hover:bg-white/[0.07] hover:border-white/[0.14] transition-all duration-150 focus:outline-none focus:border-white/20"
+      >
+        <span className={selected?.accent || "text-white/70"}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <svg className={cn("w-3.5 h-3.5 text-white/30 transition-transform duration-200", open ? "rotate-180" : "")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-[rgb(12_12_16)] border border-white/[0.1] rounded-xl shadow-xl shadow-black/50 max-h-52 overflow-y-auto py-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={cn(
+                "w-full text-left px-3 py-2 text-[13px] hover:bg-white/[0.06] transition-colors duration-100 flex items-center justify-between group",
+                value === opt.value ? "text-white bg-white/[0.05]" : "text-white/50 hover:text-white/80",
+                opt.accent || ""
+              )}
+            >
+              <span>{opt.label}</span>
+              {value === opt.value && (
+                <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 function StatCard({
   label, value, sub, accent, accentBar,
 }: {
@@ -69,6 +142,28 @@ function GlowCursor({ active }: { active: boolean }) {
 }
 
 /* ─── main page ─────────────────────────────────────────────────────────── */
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  EN: "English", TE: "Telugu", TA: "Tamil", HI: "Hindi",
+  ZH_HANS: "Chinese (Simplified)", ZH_HANT: "Chinese (Traditional)",
+  TH: "Thai", RU: "Russian", AR: "Arabic", ES: "Spanish",
+  TR: "Turkish", BN: "Bengali", ID: "Indonesian", ML: "Malayalam",
+  VI: "Vietnamese", JA: "Japanese", KO: "Korean", PT: "Portuguese",
+  FR: "French", DE: "German", IT: "Italian", PL: "Polish",
+  UK: "Ukrainian", NL: "Dutch", SV: "Swedish", NO: "Norwegian",
+  DA: "Danish", FI: "Finnish", CS: "Czech", RO: "Romanian",
+  HU: "Hungarian", SK: "Slovak", HR: "Croatian", SR: "Serbian"
+};
+
+function formatTrackLabel(raw: string): string {
+  if (!raw || raw === "default" || raw === "") return "Default / Original";
+  const cleaned = raw
+    .replace(/^Language:\s*/i, "")
+    .replace(/-/g, "_")
+    .toUpperCase()
+    .trim();
+  return LANGUAGE_NAMES[cleaned] || raw.replace(/^Language:\s*/i, "");
+}
 
 export function DownloaderPage() {
   const { items: queueItems, activeCount } = useQueue();
@@ -486,44 +581,48 @@ export function DownloaderPage() {
           {/* ── Audio & Subtitles Selection ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 animate-in fade-in slide-in-from-top-2 duration-300">
             {/* Audio Track */}
-            <div>
-              <div className="text-[9px] font-semibold uppercase tracking-[1.6px] text-white/25 mb-3 flex items-center gap-2">
-                <Music className="w-3 h-3" /> Audio Track
-              </div>
-              <select
-                value={selectedAudioLang}
-                onChange={(e) => setSelectedAudioLang(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-[rgb(9_9_12)] border border-white/[0.07] text-[13px] text-white/70 focus:outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
-              >
-                <option value="original">Default / Original</option>
-                {videoInfo.audio_tracks && videoInfo.audio_tracks.length > 0 && (
-                  <option value="all">All Available Tracks ({videoInfo.audio_tracks.length})</option>
-                )}
-                {videoInfo.audio_tracks?.map(track => (
-                  <option key={`audio-${track.id}`} value={track.language}>{track.label}</option>
-                ))}
-              </select>
-            </div>
+            <CustomSelect
+              label="Audio Track"
+              icon={<Music className="w-3 h-3" />}
+              value={selectedAudioLang}
+              onChange={setSelectedAudioLang}
+              options={[
+                { value: "original", label: "Default / Original" },
+                ...(videoInfo.audio_tracks?.map(t => ({
+                  value: t.language,
+                  label: formatTrackLabel(t.label)
+                })) || [])
+              ]}
+            />
 
             {/* Subtitles */}
-            <div>
-              <div className="text-[9px] font-semibold uppercase tracking-[1.6px] text-white/25 mb-3 flex items-center gap-2">
-                <Zap className="w-3 h-3" /> Subtitles
-              </div>
-              <select
+            {videoInfo.subtitles && videoInfo.subtitles.length > 0 ? (
+              <CustomSelect
+                label="Subtitles"
+                icon={<Captions className="w-3 h-3" />}
                 value={selectedSubLang}
-                onChange={(e) => setSelectedSubLang(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-[rgb(9_9_12)] border border-white/[0.07] text-[13px] text-white/70 focus:outline-none focus:border-white/20 transition-colors appearance-none cursor-pointer"
-              >
-                <option value="none">None</option>
-                {videoInfo.subtitles && videoInfo.subtitles.length > 0 && (
-                   <option value="all">All Available Subtitles ({videoInfo.subtitles.length})</option>
-                )}
-                {videoInfo.subtitles?.map(track => (
-                  <option key={`sub-${track.id}`} value={track.language}>{track.label}</option>
-                ))}
-              </select>
-            </div>
+                onChange={setSelectedSubLang}
+                options={[
+                  { value: "none", label: "None" },
+                  ...(videoInfo.subtitles.length > 1
+                    ? [{ value: "embed-all", label: `✦ Embed All (${videoInfo.subtitles.length})`, accent: "text-emerald-400" }]
+                    : []),
+                  ...videoInfo.subtitles.map(t => ({
+                    value: t.language,
+                    label: formatTrackLabel(t.label)
+                  }))
+                ]}
+              />
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] text-white/30 uppercase tracking-[1.4px] font-mono flex items-center gap-1.5">
+                  <Captions className="w-3 h-3" /> Subtitles
+                </label>
+                <div className="w-full h-[41px] flex items-center px-3 bg-white/[0.02] border border-white/[0.05] rounded-xl text-[12px] text-white/20 italic">
+                  No subtitles available for this video
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Download button ── */}

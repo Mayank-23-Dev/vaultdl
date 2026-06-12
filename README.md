@@ -9,6 +9,17 @@ VaultDL is a modern, high-performance desktop application for downloading media 
 - **History Tracking**: Keep track of downloaded files and quickly revisit their source URLs.
 - **Automated Engine Updates**: Seamlessly stays up to date with platform changes.
 
+## 📥 Installation
+
+VaultDL is currently in a pre-release state and is not yet code-signed. When installing on Windows, you may encounter a **Windows SmartScreen** protection prompt. 
+
+To proceed with the installation:
+1. Click **"More info"** on the blue prompt.
+2. Click **"Run anyway"** to start the installer.
+
+### 🚀 Portable Version
+If you prefer not to use an installer, you can download the **Portable ZIP** version. Simply extract the archive and run `VaultDL.exe`. This version avoids the SmartScreen installer prompt entirely and can be run from any folder or USB drive.
+
 ## 🛠️ How to Run Locally (Development Setup)
 
 If you want to run or build VaultDL from the source code, follow these steps:

@@ -39,6 +39,7 @@
           ]
         }
       ],
+      "artifactName": "VaultDLPortable-${version}-win.${ext}",
       "requestedExecutionLevel": "asInvoker",
       "icon": "public/icons/win/icon.ico",
       "extraResources": [
@@ -57,6 +58,7 @@
       ]
     },
     "nsis": {
+      "artifactName": "${productName}Setup${version}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,

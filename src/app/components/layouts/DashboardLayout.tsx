@@ -1,10 +1,10 @@
 import { Outlet, NavLink, useLocation } from "react-router";
-import { Download, ListVideo, History, Image, Settings, Wifi, ChevronRight, Heart } from "lucide-react";
+import { Download, ListVideo, History, Image, Settings, Wifi, ChevronRight, Heart, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { cn } from "../ui/utils";
 import { useQueue } from "../../lib/QueueContext";
 import { useEffect, useState } from "react";
-import { fetchHealth } from "../../lib/api";
+import { fetchHealth, checkUpdate, UpdateInfo } from "../../lib/api";
 
 export function DashboardLayout() {
   const { items, activeCount } = useQueue();
@@ -12,6 +12,7 @@ export function DashboardLayout() {
   const location = useLocation();
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [ytdlpVersion, setYtdlpVersion] = useState<string>("loading...");
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   useEffect(() => {
     async function check() {
@@ -25,6 +26,10 @@ export function DashboardLayout() {
       }
     }
     check();
+    
+    // Check for app updates
+    checkUpdate().then(setUpdateInfo).catch(() => {});
+
     const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -112,6 +117,18 @@ export function DashboardLayout() {
 
           {/* Divider */}
           <div className="h-px bg-white/[0.05] my-3 mx-1" />
+
+          {/* Update Notification */}
+          {updateInfo?.updateAvailable && (
+            <NavLink
+              to="/dashboard/settings"
+              className="flex items-center gap-2.5 px-3 py-[7px] mb-1 rounded-lg text-[12.5px] bg-emerald-500/[0.1] text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/[0.15] transition-all group"
+            >
+              <Sparkles className="w-[15px] h-[15px] shrink-0 animate-pulse" strokeWidth={2} />
+              <span className="font-semibold flex-1">Update Available</span>
+              <span className="text-[10px] mono bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">v{updateInfo.latestVersion}</span>
+            </NavLink>
+          )}
 
           {/* Settings */}
           <NavLink

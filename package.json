@@ -17,45 +17,44 @@
   "build": {
     "productName": "VaultDL",
     "appId": "com.vaultdl.app",
-    "artifactName": "${productName}Setup${version}.${ext}",
     "icon": "icon.png",
     "files": [
       "dist/**",
       "electron.cjs",
       "preload.cjs"
     ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "backend/node_modules",
+        "to": "backend/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "yt-dlp.exe",
+        "to": "yt-dlp.exe"
+      },
+      {
+        "from": "ffmpeg.exe",
+        "to": "ffmpeg.exe"
+      }
+    ],
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
+        "nsis",
+        "zip"
       ],
       "artifactName": "VaultDLPortable-${version}-win.${ext}",
       "requestedExecutionLevel": "asInvoker",
-      "icon": "public/icons/win/icon.ico",
-      "extraResources": [
-        {
-          "from": "backend",
-          "to": "backend"
-        },
-        {
-          "from": "yt-dlp.exe",
-          "to": "yt-dlp.exe"
-        },
-        {
-          "from": "ffmpeg.exe",
-          "to": "ffmpeg.exe"
-        }
-      ]
+      "icon": "public/icons/win/icon.ico"
     },
     "nsis": {
       "artifactName": "${productName}Setup${version}.${ext}",

@@ -33,12 +33,18 @@ ipcMain.handle('open-folder', async (event, folderPath) => {
 });
 
 function startBackend() {
-  const backendScript = path.join(__dirname, 'backend/server.mjs');
+  const backendScript = path.join(
+    app.isPackaged
+      ? path.join(process.resourcesPath, 'backend', 'server.mjs')
+      : path.join(__dirname, 'backend', 'server.mjs')
+  );
   const logPath = path.join(app.getPath('userData'), 'backend.log');
   const logStream = fs.createWriteStream(logPath, { flags: 'a' });
 
   const env = {
     ...process.env,
+    IS_PACKAGED: app.isPackaged.toString(),
+    RESOURCES_PATH: resourcesPath,
     YT_DLP_PATH: path.join(resourcesPath, 'yt-dlp.exe'),
     FFMPEG_PATH: path.join(resourcesPath, 'ffmpeg.exe'),
     PORT: '3000',

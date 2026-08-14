@@ -144,25 +144,64 @@ function GlowCursor({ active }: { active: boolean }) {
 /* ─── main page ─────────────────────────────────────────────────────────── */
 
 const LANGUAGE_NAMES: Record<string, string> = {
-  EN: "English", TE: "Telugu", TA: "Tamil", HI: "Hindi",
-  ZH_HANS: "Chinese (Simplified)", ZH_HANT: "Chinese (Traditional)",
-  TH: "Thai", RU: "Russian", AR: "Arabic", ES: "Spanish",
-  TR: "Turkish", BN: "Bengali", ID: "Indonesian", ML: "Malayalam",
-  VI: "Vietnamese", JA: "Japanese", KO: "Korean", PT: "Portuguese",
-  FR: "French", DE: "German", IT: "Italian", PL: "Polish",
-  UK: "Ukrainian", NL: "Dutch", SV: "Swedish", NO: "Norwegian",
-  DA: "Danish", FI: "Finnish", CS: "Czech", RO: "Romanian",
-  HU: "Hungarian", SK: "Slovak", HR: "Croatian", SR: "Serbian"
+  EN: "English",
+  "EN-US": "English (US)",
+  "EN-GB": "English (UK)",
+  TE: "Telugu",
+  TA: "Tamil",
+  HI: "Hindi",
+  ZH: "Chinese",
+  "ZH-HANS": "Chinese (Simplified)",
+  "ZH-HANT": "Chinese (Traditional)",
+  TH: "Thai",
+  RU: "Russian",
+  AR: "Arabic",
+  ES: "Spanish",
+  "ES-419": "Spanish (Latin America)",
+  "ES-ES": "Spanish (Spain)",
+  TR: "Turkish",
+  BN: "Bengali",
+  ID: "Indonesian",
+  ML: "Malayalam",
+  VI: "Vietnamese",
+  JA: "Japanese",
+  KO: "Korean",
+  PT: "Portuguese",
+  "PT-BR": "Portuguese (Brazil)",
+  FR: "French",
+  DE: "German",
+  IT: "Italian",
+  PL: "Polish",
+  UK: "Ukrainian",
+  NL: "Dutch",
+  SV: "Swedish",
+  NO: "Norwegian",
+  DA: "Danish",
+  FI: "Finnish",
+  CS: "Czech",
+  RO: "Romanian",
+  HU: "Hungarian",
+  SK: "Slovak",
+  HR: "Croatian",
+  SR: "Serbian",
+  MR: "Marathi",
+  GU: "Gujarati",
+  PA: "Punjabi",
+  KN: "Kannada",
+  UR: "Urdu"
 };
 
 function formatTrackLabel(raw: string): string {
-  if (!raw || raw === "default" || raw === "") return "Default / Original";
-  const cleaned = raw
-    .replace(/^Language:\s*/i, "")
-    .replace(/-/g, "_")
-    .toUpperCase()
-    .trim();
-  return LANGUAGE_NAMES[cleaned] || raw.replace(/^Language:\s*/i, "");
+  if (!raw || raw === "default" || raw === "" || raw === "none") return "Default / Original";
+  const cleaned = raw.replace(/^Language:\s*/i, "").trim();
+  const upperClean = cleaned.toUpperCase().replace(/_/g, "-");
+
+  if (LANGUAGE_NAMES[upperClean]) return LANGUAGE_NAMES[upperClean];
+  const baseCode = upperClean.split(/[-_]/)[0];
+  if (LANGUAGE_NAMES[baseCode] && cleaned.length <= 8) {
+    return `${LANGUAGE_NAMES[baseCode]} (${cleaned})`;
+  }
+  return cleaned;
 }
 
 export function DownloaderPage() {
@@ -586,13 +625,25 @@ export function DownloaderPage() {
               icon={<Music className="w-3 h-3" />}
               value={selectedAudioLang}
               onChange={setSelectedAudioLang}
-              options={[
-                { value: "original", label: "Default / Original" },
-                ...(videoInfo.audio_tracks?.map(t => ({
-                  value: t.language,
-                  label: formatTrackLabel(t.label)
-                })) || [])
-              ]}
+              options={(() => {
+                const tracks = videoInfo.audio_tracks || [];
+                const opts: { value: string; label: string; accent?: string }[] = [
+                  { value: "original", label: "Default / Original" }
+                ];
+                const seen = new Set(["original"]);
+                for (const t of tracks) {
+                  const val = t.language || t.id || t.formatId;
+                  if (val && !seen.has(val)) {
+                    seen.add(val);
+                    const formatted = formatTrackLabel(t.label || t.trackName || t.language);
+                    opts.push({
+                      value: val,
+                      label: formatted
+                    });
+                  }
+                }
+                return opts;
+              })()}
             />
 
             {/* Subtitles */}

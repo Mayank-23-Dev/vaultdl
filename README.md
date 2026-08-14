@@ -20,6 +20,22 @@ To proceed with the installation:
 ### 🚀 Portable Version
 If you prefer not to use an installer, you can download the **Portable ZIP** version. Simply extract the archive and run `VaultDL.exe`. This version avoids the SmartScreen installer prompt entirely and can be run from any folder or USB drive.
 
+#### ⚠️ Before You Extract
+Windows tags files downloaded from the internet with a "Mark of the Web" flag. Extracted files (including `VaultDL.exe`) inherit this flag and may trigger a SmartScreen warning.
+
+To avoid this, it is recommended to **unblock the ZIP** before extracting:
+1. **Right-click** the downloaded ZIP file.
+2. Click **Properties**.
+3. At the bottom, check the **"Unblock"** checkbox.
+4. Click **OK**, then extract normally.
+
+**PowerShell alternative (advanced users):**
+```powershell
+Unblock-File -Path "C:\path\to\VaultDLPortable-0.0.11-win.zip"
+```
+
+*Note: This is a known Windows behavior for all unsigned apps downloaded from the internet and is not specific to VaultDL.*
+
 ## 🛠️ How to Run Locally (Development Setup)
 
 If you want to run or build VaultDL from the source code, follow these steps:

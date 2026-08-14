@@ -5,13 +5,27 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Detect environment
+const isPackaged = process.env.IS_PACKAGED === 'true' || __dirname.includes('app.asar');
+
+// Resolve binaries: Prefer env vars from Electron, fallback to calculated paths
+const YT_DLP = process.env.YT_DLP_PATH || (isPackaged 
+  ? path.join(process.env.RESOURCES_PATH || path.join(__dirname, '../../'), 'yt-dlp.exe')
+  : path.join(process.cwd(), 'yt-dlp.exe'));
+
+const FFMPEG = process.env.FFMPEG_PATH || (isPackaged 
+  ? path.join(process.env.RESOURCES_PATH || path.join(__dirname, '../../'), 'ffmpeg.exe')
+  : path.join(process.cwd(), 'ffmpeg.exe'));
+
+let ytdlpVersion = 'loading...';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const YT_DLP = process.env.YT_DLP_PATH || path.join(process.cwd(), 'yt-dlp.exe');
-const FFMPEG = process.env.FFMPEG_PATH || path.join(process.cwd(), 'ffmpeg.exe');
-
-let ytdlpVersion = 'loading...';
 
 console.log(`[Backend] YT_DLP path: ${YT_DLP}`);
 console.log(`[Backend] FFMPEG path: ${FFMPEG}`);
@@ -114,20 +128,26 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/check-update', async (req, res) => {
   try {
-    // In a real scenario, you'd host this version.json on GitHub or your own server
-    // For now, I'll use a placeholder URL. You should replace this with your actual URL later.
-    const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/public/version.json';
+    const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/Mayank-23-Dev/vaultdl/main/public/version.json';
+    const response = await fetch(REMOTE_VERSION_URL);
+    if (!response.ok) throw new Error('Failed to fetch remote version');
     
-    // We'll simulate a check for now by comparing with a hardcoded version
-    // If you have a real URL, you can use fetch(REMOTE_VERSION_URL)
+    const remoteData = await response.json();
+    const currentVersion = '0.0.11';
+    const latestVersion = remoteData.version;
+    
+    // Simple semver-ish comparison
+    const updateAvailable = latestVersion !== currentVersion;
     
     res.json({
-      currentVersion: '0.0.11',
-      latestVersion: '0.0.11', // This would come from the remote fetch
-      updateAvailable: false,
-      notes: 'No new updates available.'
+      currentVersion,
+      latestVersion,
+      updateAvailable,
+      notes: remoteData.notes || 'No release notes available.',
+      downloadUrl: remoteData.downloadUrl
     });
   } catch (err) {
+    console.error('[Backend] Update check failed:', err.message);
     res.status(500).json({ error: 'Failed to check for updates' });
   }
 });
@@ -154,9 +174,10 @@ app.post('/api/info', async (req, res) => {
     const jsRuntime = `--js-runtimes "node:${process.execPath}"`;
     const remoteComponents = '--remote-components ejs:github';
     const ffmpegFlag = FFMPEG !== 'ffmpeg' ? `--ffmpeg-location "${FFMPEG}"` : '';
-    const child = exec(`"${YT_DLP}" ${ffmpegFlag} ${jsRuntime} ${remoteComponents} --dump-json --no-playlist "${url}"`, {
+    const extractorArgs = '--extractor-args "youtube:player_client=web,default"';
+    const child = exec(`"${YT_DLP}" ${ffmpegFlag} ${jsRuntime} ${remoteComponents} ${extractorArgs} --dump-json --no-playlist "${url}"`, {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-      maxBuffer: 10 * 1024 * 1024 // 10MB to avoid maxBuffer exceeded errors on huge JSONs
+      maxBuffer: 15 * 1024 * 1024 // 15MB to avoid maxBuffer exceeded errors on huge JSONs
     });
     let stdout = '';
     let stderr = '';
@@ -185,33 +206,49 @@ app.post('/api/info', async (req, res) => {
             acodec: f.acodec,
           }));
 
-        // Rich audio track extraction
+        // Rich audio track extraction (with support for dubs, multi-languages, and format notes)
         const audioMap = new Map();
         (info.formats || []).forEach(f => {
           if (f.acodec && f.acodec !== 'none') {
-            const lang = f.language || 'und';
-            if (lang === 'und') return;
+            const lang = f.language && f.language !== 'und' ? f.language : '';
+            const note = f.format_note || '';
+            const trackId = f.audio_track_id || '';
+            const trackName = f.audio_track_name || '';
 
-            const id = f.audio_track_id || lang;
-            
-            if (!audioMap.has(id)) {
-              let label = `Language: ${lang.toUpperCase()}`;
-              if (f.audio_track_name) {
-                label = `${f.audio_track_name} (${lang.toUpperCase()})`;
-              }
-              
-              audioMap.set(id, {
-                id: id,
-                language: lang,
+            // Clean format_note (remove low/medium/abr noise to extract true track label)
+            let noteLabel = note.replace(/,\s*(low|medium|ultralow|high|default|\d+k)/gi, '').trim();
+
+            // Form key to group identical tracks across qualities
+            const key = trackId || lang || trackName || noteLabel || f.format_id;
+
+            let label = trackName;
+            if (!label && noteLabel) {
+              label = noteLabel;
+            } else if (!label && lang) {
+              label = `Language: ${lang.toUpperCase()}`;
+            } else if (!label) {
+              label = `Audio Track (${f.format_id})`;
+            }
+
+            if (!audioMap.has(key)) {
+              audioMap.set(key, {
+                id: key,
+                language: lang || key,
                 formatId: f.format_id,
-                trackName: f.audio_track_name || '',
-                label: label
+                trackName: trackName || noteLabel || '',
+                label: label,
+                abr: f.abr || f.tbr || 0,
               });
             } else {
-              const existing = audioMap.get(id);
-              if (!existing.trackName && f.audio_track_name) {
-                existing.trackName = f.audio_track_name;
-                existing.label = `${f.audio_track_name} (${lang.toUpperCase()})`;
+              const existing = audioMap.get(key);
+              const currentAbr = f.abr || f.tbr || 0;
+              if (currentAbr > (existing.abr || 0)) {
+                existing.formatId = f.format_id;
+                existing.abr = currentAbr;
+              }
+              if (!existing.trackName && (trackName || noteLabel)) {
+                existing.trackName = trackName || noteLabel;
+                existing.label = label;
               }
             }
           }
@@ -309,10 +346,17 @@ app.post('/api/download', (req, res) => {
   const audioMultiFlag = '--audio-multistreams --embed-metadata';
   const audioFormat = format === 'mp3' ? 'mp3' : 'best';
 
-  // JS Runtime for multi-track extraction
+  // JS Runtime and Extractor args for multi-track & dub extraction
   const jsRuntime = `--js-runtimes "node:${process.execPath}"`;
   const remoteComponents = '--remote-components ejs:github';
-  const baseFlags = `${jsRuntime} ${remoteComponents} ${ffmpegFlag} ${thumbFlag}`;
+  const extractorArgs = '--extractor-args "youtube:player_client=web,default"';
+  const baseFlags = `${jsRuntime} ${remoteComponents} ${extractorArgs} ${ffmpegFlag} ${thumbFlag}`;
+
+  // Premiere Pro / NLE Compatibility:
+  // MP4 container requires H.264 video + AAC audio. Premiere Pro fails on Opus audio in MP4 and AV1 video.
+  const isMp4 = format.toLowerCase() === 'mp4';
+  const formatSortFlag = isMp4 ? '--format-sort "vcodec:h264,acodec:aac,quality,res,fps"' : '';
+  const ppArgs = isMp4 ? '--postprocessor-args "Merger:-c:a aac -b:a 192k"' : '';
 
   let cmd = '';
   if (type === 'audio') {
@@ -321,21 +365,21 @@ app.post('/api/download', (req, res) => {
     cmd = `"${YT_DLP}" ${baseFlags} --write-thumbnail --skip-download --no-playlist --newline -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else if (type === 'video_only') {
     const qualityFlag = quality === 'best' ? 'bestvideo' : `bestvideo[height<=${quality}]`;
-    cmd = `"${YT_DLP}" ${baseFlags} ${subFlag} -f "${qualityFlag}" --no-playlist --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    cmd = `"${YT_DLP}" ${baseFlags} ${subFlag} ${formatSortFlag} -f "${qualityFlag}" --no-playlist --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else {
     const mergeFlag = appSettings.autoMerge ? `--merge-output-format ${format}` : '';
     
     let formatSelector = '';
     const qHeight = quality === 'best' ? '9999' : quality;
     
-    if (audio_lang && audio_lang !== 'original') {
-      // YouTube dubs: Check for pre-multiplexed first, then explicitly use audio_track_id or language
-      formatSelector = `best[height<=${qHeight}][audio_track_id=${audio_lang}]/best[height<=${qHeight}][language=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[audio_track_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[language=${audio_lang}]/bestvideo+bestaudio/best`;
+    if (audio_lang && audio_lang !== 'original' && audio_lang !== 'default') {
+      // YouTube dubs & specific tracks: match by language prefix, track ID, or format ID with fallbacks
+      formatSelector = `bestvideo[height<=${qHeight}]+bestaudio[language^=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[audio_track_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[format_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio/best`;
     } else {
       formatSelector = quality === 'best' ? 'bestvideo+bestaudio/best' : `bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]`;
     }
     
-    cmd = `"${YT_DLP}" ${baseFlags} ${subFlag} ${audioMultiFlag} -f "${formatSelector}" --no-playlist ${mergeFlag} --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    cmd = `"${YT_DLP}" ${baseFlags} ${subFlag} ${audioMultiFlag} ${formatSortFlag} -f "${formatSelector}" --no-playlist ${mergeFlag} ${ppArgs} --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   }
 
   const child = exec(cmd, { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } });

@@ -171,13 +171,13 @@ app.post('/api/info', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'URL required' });
 
   try {
-    const jsRuntime = `--js-runtimes "node:${process.execPath}"`;
+    const jsRuntime = '--js-runtimes node';
     const remoteComponents = '--remote-components ejs:github';
     const ffmpegFlag = FFMPEG !== 'ffmpeg' ? `--ffmpeg-location "${FFMPEG}"` : '';
-    const extractorArgs = '--extractor-args "youtube:player_client=web,default"';
+    const extractorArgs = '--extractor-args "youtube:player_client=web,web_embedded,default"';
     const child = exec(`"${YT_DLP}" ${ffmpegFlag} ${jsRuntime} ${remoteComponents} ${extractorArgs} --dump-json --no-playlist "${url}"`, {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-      maxBuffer: 15 * 1024 * 1024 // 15MB to avoid maxBuffer exceeded errors on huge JSONs
+      maxBuffer: 50 * 1024 * 1024 // 50MB buffer to handle all multi-language client streams
     });
     let stdout = '';
     let stderr = '';
@@ -206,38 +206,59 @@ app.post('/api/info', async (req, res) => {
             acodec: f.acodec,
           }));
 
-        // Extract all audio streams and dub tracks present on the URL
-        const audio_tracks = [];
-        const seenIds = new Set();
+        // Extract all distinct languages and audio dub tracks present on the URL
+        const trackMap = new Map();
         (info.formats || []).forEach(f => {
-          if (f.acodec && f.acodec !== 'none' && !seenIds.has(f.format_id)) {
-            seenIds.add(f.format_id);
+          if (f.acodec && f.acodec !== 'none') {
             const lang = (f.language && f.language !== 'und') ? f.language : '';
             const note = f.format_note || '';
             const trackName = f.audio_track_name || '';
-            const ext = f.ext || f.audio_ext || 'audio';
-            const abrNum = f.abr || f.tbr || 0;
-            const abr = abrNum ? `${Math.round(abrNum)}k` : '';
-            const codec = f.acodec.split('.')[0];
 
-            let title = trackName || note || (lang ? `Language: ${lang.toUpperCase()}` : `Track ${f.format_id}`);
+            // Clean noise from format note
+            const noteClean = note.replace(/,\s*(low|medium|ultralow|high|default|\d+k|DRC)/gi, '').trim();
             
-            // Build rich informative label
-            const details = [abr, ext.toUpperCase(), codec && codec !== 'none' ? codec : ''].filter(Boolean).join(' · ');
-            const label = details ? `${title} (${details})` : title;
+            // Determine human-friendly name
+            let cleanName = '';
+            if (trackName) {
+              cleanName = trackName;
+            } else if (noteClean && noteClean.toLowerCase() !== 'low' && noteClean.toLowerCase() !== 'medium') {
+              cleanName = noteClean;
+            } else if (lang) {
+              cleanName = lang;
+            } else {
+              cleanName = `Track ${f.format_id}`;
+            }
 
-            audio_tracks.push({
-              id: f.format_id,
-              formatId: f.format_id,
-              language: lang || f.format_id,
-              trackName: title,
-              label: label,
-              ext: ext,
-              acodec: f.acodec,
-              abr: abrNum,
-              isAudioOnly: !f.height
-            });
+            // Detect if this is original or dubbed
+            const isOriginal = note.toLowerCase().includes('original') || cleanName.toLowerCase().includes('original');
+
+            // Unique key per language or track
+            const groupKey = lang ? lang.toLowerCase() : cleanName.toLowerCase();
+            const abr = f.abr || f.tbr || 0;
+            const isBetter = !trackMap.has(groupKey) || (abr > (trackMap.get(groupKey).abr || 0));
+
+            if (isBetter) {
+              trackMap.set(groupKey, {
+                id: groupKey,
+                formatId: f.format_id,
+                language: lang || groupKey,
+                trackName: cleanName,
+                label: cleanName + (isOriginal && !cleanName.toLowerCase().includes('original') ? ' (Original)' : ''),
+                abr: abr,
+                ext: f.ext || f.audio_ext || 'audio',
+                acodec: f.acodec,
+                isOriginal: isOriginal
+              });
+            }
           }
+        });
+
+        const audio_tracks = Array.from(trackMap.values());
+        // Sort original audio tracks first, followed by alphabetical order for dubbed languages
+        audio_tracks.sort((a, b) => {
+          if (a.isOriginal && !b.isOriginal) return -1;
+          if (!a.isOriginal && b.isOriginal) return 1;
+          return a.label.localeCompare(b.label);
         });
 
         // Rich subtitle extraction
@@ -332,9 +353,9 @@ app.post('/api/download', (req, res) => {
   const audioFormat = format === 'mp3' ? 'mp3' : 'best';
 
   // JS Runtime and Extractor args for multi-track & dub extraction
-  const jsRuntime = `--js-runtimes "node:${process.execPath}"`;
+  const jsRuntime = '--js-runtimes node';
   const remoteComponents = '--remote-components ejs:github';
-  const extractorArgs = '--extractor-args "youtube:player_client=web,default"';
+  const extractorArgs = '--extractor-args "youtube:player_client=web,web_embedded,default"';
   const baseFlags = `${jsRuntime} ${remoteComponents} ${extractorArgs} ${ffmpegFlag} ${thumbFlag}`;
 
   // Premiere Pro / NLE Compatibility:

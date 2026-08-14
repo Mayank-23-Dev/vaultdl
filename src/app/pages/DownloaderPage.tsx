@@ -198,8 +198,8 @@ function formatTrackLabel(raw: string): string {
 
   if (LANGUAGE_NAMES[upperClean]) return LANGUAGE_NAMES[upperClean];
   const baseCode = upperClean.split(/[-_]/)[0];
-  if (LANGUAGE_NAMES[baseCode] && cleaned.length <= 8) {
-    return `${LANGUAGE_NAMES[baseCode]} (${cleaned})`;
+  if (LANGUAGE_NAMES[baseCode]) {
+    return LANGUAGE_NAMES[baseCode];
   }
   return cleaned;
 }
@@ -628,15 +628,23 @@ export function DownloaderPage() {
               options={(() => {
                 const tracks = videoInfo.audio_tracks || [];
                 const opts: { value: string; label: string; accent?: string }[] = [
-                  { value: "original", label: "Default / Best Available" }
+                  { value: "original", label: "Default / Original" }
                 ];
-                tracks.forEach((t) => {
-                  const val = t.formatId || t.id || t.language;
-                  opts.push({
-                    value: val,
-                    label: t.label || formatTrackLabel(t.trackName || t.language)
-                  });
-                });
+                const seen = new Set(["original"]);
+                for (const t of tracks) {
+                  const val = t.formatId || t.language || t.id;
+                  if (val && !seen.has(val)) {
+                    seen.add(val);
+                    const formatted = t.label && !t.label.toLowerCase().startsWith("track ")
+                      ? t.label
+                      : formatTrackLabel(t.trackName || t.language);
+                    opts.push({
+                      value: val,
+                      label: formatted,
+                      accent: t.isOriginal ? "text-emerald-400" : undefined
+                    });
+                  }
+                }
                 return opts;
               })()}
             />

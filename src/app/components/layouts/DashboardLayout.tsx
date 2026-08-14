@@ -65,7 +65,7 @@ export function DashboardLayout() {
         {/* Logo */}
         <div className="h-[52px] px-4 flex items-center gap-3 border-b border-white/[0.05] shrink-0">
           <span className="mono font-semibold text-[13px] text-white tracking-tight">VaultDL</span>
-          <span className="ml-auto text-[9px] mono text-white/15 font-medium bg-white/[0.04] px-1.5 py-0.5 rounded-sm border border-white/[0.06]">v0.0.11</span>
+          <span className="ml-auto text-[9px] mono text-white/15 font-medium bg-white/[0.04] px-1.5 py-0.5 rounded-sm border border-white/[0.06]">v0.0.12</span>
         </div>
 
         {/* Nav */}

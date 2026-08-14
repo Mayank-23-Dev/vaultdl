@@ -123,7 +123,7 @@ function updateYtdlp() {
 updateYtdlp();
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '0.0.11', ytdlp: ytdlpVersion });
+  res.json({ status: 'ok', version: '0.0.12', ytdlp: ytdlpVersion });
 });
 
 app.get('/api/check-update', async (req, res) => {
@@ -133,7 +133,7 @@ app.get('/api/check-update', async (req, res) => {
     if (!response.ok) throw new Error('Failed to fetch remote version');
     
     const remoteData = await response.json();
-    const currentVersion = '0.0.11';
+    const currentVersion = '0.0.12';
     const latestVersion = remoteData.version;
     
     // Simple semver-ish comparison
@@ -206,54 +206,39 @@ app.post('/api/info', async (req, res) => {
             acodec: f.acodec,
           }));
 
-        // Rich audio track extraction (with support for dubs, multi-languages, and format notes)
-        const audioMap = new Map();
+        // Extract all audio streams and dub tracks present on the URL
+        const audio_tracks = [];
+        const seenIds = new Set();
         (info.formats || []).forEach(f => {
-          if (f.acodec && f.acodec !== 'none') {
-            const lang = f.language && f.language !== 'und' ? f.language : '';
+          if (f.acodec && f.acodec !== 'none' && !seenIds.has(f.format_id)) {
+            seenIds.add(f.format_id);
+            const lang = (f.language && f.language !== 'und') ? f.language : '';
             const note = f.format_note || '';
-            const trackId = f.audio_track_id || '';
             const trackName = f.audio_track_name || '';
+            const ext = f.ext || f.audio_ext || 'audio';
+            const abrNum = f.abr || f.tbr || 0;
+            const abr = abrNum ? `${Math.round(abrNum)}k` : '';
+            const codec = f.acodec.split('.')[0];
 
-            // Clean format_note (remove low/medium/abr noise to extract true track label)
-            let noteLabel = note.replace(/,\s*(low|medium|ultralow|high|default|\d+k)/gi, '').trim();
+            let title = trackName || note || (lang ? `Language: ${lang.toUpperCase()}` : `Track ${f.format_id}`);
+            
+            // Build rich informative label
+            const details = [abr, ext.toUpperCase(), codec && codec !== 'none' ? codec : ''].filter(Boolean).join(' · ');
+            const label = details ? `${title} (${details})` : title;
 
-            // Form key to group identical tracks across qualities
-            const key = trackId || lang || trackName || noteLabel || f.format_id;
-
-            let label = trackName;
-            if (!label && noteLabel) {
-              label = noteLabel;
-            } else if (!label && lang) {
-              label = `Language: ${lang.toUpperCase()}`;
-            } else if (!label) {
-              label = `Audio Track (${f.format_id})`;
-            }
-
-            if (!audioMap.has(key)) {
-              audioMap.set(key, {
-                id: key,
-                language: lang || key,
-                formatId: f.format_id,
-                trackName: trackName || noteLabel || '',
-                label: label,
-                abr: f.abr || f.tbr || 0,
-              });
-            } else {
-              const existing = audioMap.get(key);
-              const currentAbr = f.abr || f.tbr || 0;
-              if (currentAbr > (existing.abr || 0)) {
-                existing.formatId = f.format_id;
-                existing.abr = currentAbr;
-              }
-              if (!existing.trackName && (trackName || noteLabel)) {
-                existing.trackName = trackName || noteLabel;
-                existing.label = label;
-              }
-            }
+            audio_tracks.push({
+              id: f.format_id,
+              formatId: f.format_id,
+              language: lang || f.format_id,
+              trackName: title,
+              label: label,
+              ext: ext,
+              acodec: f.acodec,
+              abr: abrNum,
+              isAudioOnly: !f.height
+            });
           }
         });
-        const audio_tracks = Array.from(audioMap.values());
 
         // Rich subtitle extraction
         const subMap = new Map();
@@ -360,7 +345,10 @@ app.post('/api/download', (req, res) => {
 
   let cmd = '';
   if (type === 'audio') {
-    cmd = `"${YT_DLP}" ${baseFlags} ${audioMultiFlag} -x --audio-format ${audioFormat} --no-playlist --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
+    const audioFmtFlag = (audio_lang && audio_lang !== 'original' && audio_lang !== 'default')
+      ? `-f "${audio_lang}/bestaudio"`
+      : '';
+    cmd = `"${YT_DLP}" ${baseFlags} ${audioMultiFlag} ${audioFmtFlag} -x --audio-format ${audioFormat} --no-playlist --concurrent-fragments 4 --no-part --buffer-size 16K --newline ${speedFlag} -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else if (type === 'thumbnail') {
     cmd = `"${YT_DLP}" ${baseFlags} --write-thumbnail --skip-download --no-playlist --newline -o "${resolvedPath}/%(title)s.%(ext)s" "${url}"`;
   } else if (type === 'video_only') {
@@ -373,8 +361,8 @@ app.post('/api/download', (req, res) => {
     const qHeight = quality === 'best' ? '9999' : quality;
     
     if (audio_lang && audio_lang !== 'original' && audio_lang !== 'default') {
-      // YouTube dubs & specific tracks: match by language prefix, track ID, or format ID with fallbacks
-      formatSelector = `bestvideo[height<=${qHeight}]+bestaudio[language^=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[audio_track_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[format_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio/best`;
+      // Direct format ID or language match with robust fallbacks
+      formatSelector = `bestvideo[height<=${qHeight}]+${audio_lang}/bestvideo[height<=${qHeight}]+bestaudio[language^=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[audio_track_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio[format_id=${audio_lang}]/bestvideo[height<=${qHeight}]+bestaudio/best`;
     } else {
       formatSelector = quality === 'best' ? 'bestvideo+bestaudio/best' : `bestvideo[height<=${quality}]+bestaudio/best[height<=${quality}]`;
     }

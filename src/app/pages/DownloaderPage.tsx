@@ -628,20 +628,15 @@ export function DownloaderPage() {
               options={(() => {
                 const tracks = videoInfo.audio_tracks || [];
                 const opts: { value: string; label: string; accent?: string }[] = [
-                  { value: "original", label: "Default / Original" }
+                  { value: "original", label: "Default / Best Available" }
                 ];
-                const seen = new Set(["original"]);
-                for (const t of tracks) {
-                  const val = t.language || t.id || t.formatId;
-                  if (val && !seen.has(val)) {
-                    seen.add(val);
-                    const formatted = formatTrackLabel(t.label || t.trackName || t.language);
-                    opts.push({
-                      value: val,
-                      label: formatted
-                    });
-                  }
-                }
+                tracks.forEach((t) => {
+                  const val = t.formatId || t.id || t.language;
+                  opts.push({
+                    value: val,
+                    label: t.label || formatTrackLabel(t.trackName || t.language)
+                  });
+                });
                 return opts;
               })()}
             />

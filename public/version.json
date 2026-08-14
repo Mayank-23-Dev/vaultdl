@@ -1,6 +1,6 @@
 {
-  "version": "0.0.11",
-  "releaseDate": "2026-06-11",
-  "notes": "Final v0.0.11 release: Cleaned up sidebar scrollbars, enabled subtitles by default, disabled thumbnails by default, and improved multi-audio engine.",
-  "downloadUrl": "https://github.com/Mayank-23-Dev/vaultdl/releases/download/v0.0.11/VaultDLSetup0.0.11.exe"
+  "version": "0.0.12",
+  "releaseDate": "2026-08-15",
+  "notes": "v0.0.12: Fixed Premiere Pro import codec compatibility (AAC audio transcoding & H.264/AVC stream preference) and enhanced multi-language audio track detection for YouTube dubs.",
+  "downloadUrl": "https://github.com/Mayank-23-Dev/vaultdl/releases/download/v0.0.12/VaultDLSetup0.0.12.exe"
 }

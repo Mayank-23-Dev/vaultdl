@@ -31,7 +31,7 @@ To avoid this, it is recommended to **unblock the ZIP** before extracting:
 
 **PowerShell alternative (advanced users):**
 ```powershell
-Unblock-File -Path "C:\path\to\VaultDLPortable-0.0.11-win.zip"
+Unblock-File -Path "C:\path\to\VaultDLPortable-0.0.12-win.zip"
 ```
 
 *Note: This is a known Windows behavior for all unsigned apps downloaded from the internet and is not specific to VaultDL.*

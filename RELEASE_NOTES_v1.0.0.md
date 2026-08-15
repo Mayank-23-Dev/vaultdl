@@ -1,4 +1,4 @@
-# 🚀 What's New in v0.0.12
+# 🚀 What's New in VaultDL v1.0.0 (Official Release)
 
 ### 🌐 Multi-Language Audio Dubs & Complete Track Selection
 - **All Language Dubs Available**: Enabled YouTube web embedded player extraction (`web_embedded`), allowing VaultDL to detect and display all available dubbed audio languages (Hindi, Spanish, German, French, Japanese, Korean, Tamil, Telugu, Bangla, Marathi, Punjabi, Russian, Arabic, Portuguese, etc.).
@@ -15,7 +15,7 @@
 
 | File | Description | Size |
 | :--- | :--- | :--- |
-| **`VaultDLSetup0.0.12.exe`** | Standard Windows installer | ~268 MB |
-| **`VaultDLPortable-0.0.12-win.zip`** | Portable standalone zip (extract and run) | ~355 MB |
+| **`VaultDLSetup1.0.0.exe`** | Standard Windows installer | ~268 MB |
+| **`VaultDLPortable-1.0.0-win.zip`** | Portable standalone zip (extract and run) | ~355 MB |
 
 > **Note for Windows Users**: VaultDL is currently in pre-release and not yet code-signed. If Windows SmartScreen appears during installation, click **"More info"** -> **"Run anyway"**.

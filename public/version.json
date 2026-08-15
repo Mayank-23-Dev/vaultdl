@@ -1,6 +1,6 @@
 {
-  "version": "0.0.12",
+  "version": "1.0.0",
   "releaseDate": "2026-08-15",
-  "notes": "v0.0.12: Fixed Premiere Pro import codec compatibility (AAC audio transcoding & H.264/AVC stream preference) and enhanced multi-language audio track detection for YouTube dubs.",
-  "downloadUrl": "https://github.com/Mayank-23-Dev/vaultdl/releases/download/v0.0.12/VaultDLSetup0.0.12.exe"
+  "notes": "VaultDL v1.0.0: Official Release with comprehensive multi-language audio dub support, Premiere Pro AAC/H.264 import compatibility, and complete download queue management.",
+  "downloadUrl": "https://github.com/Mayank-23-Dev/vaultdl/releases/download/v1.0.0/VaultDLSetup1.0.0.exe"
 }

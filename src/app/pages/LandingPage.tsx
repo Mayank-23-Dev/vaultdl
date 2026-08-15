@@ -248,7 +248,7 @@ export function LandingPage() {
             <span className="mono text-[12px] text-white/25">VaultDL</span>
           </div>
           <p className="mono text-[11px] text-white/20">
-            Built with yt-dlp + ffmpeg · v0.0.12
+            Built with yt-dlp + ffmpeg · v1.0.0
           </p>
           <div className="flex items-center gap-4">
             {["GitHub", "Changelog", "Docs"].map(l => (

@@ -161,7 +161,7 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[13px] font-medium text-white/70">Current Version</div>
-              <div className="text-[11px] mono text-white/20 mt-0.5">v{updateInfo?.currentVersion || '0.0.12'}</div>
+              <div className="text-[11px] mono text-white/20 mt-0.5">v{updateInfo?.currentVersion || '1.0.0'}</div>
             </div>
             <Button
               variant="outline"
@@ -339,7 +339,7 @@ export function SettingsPage() {
       </div>
       
       <p className="mt-8 text-center text-[11px] mono text-white/10 uppercase tracking-widest">
-        Configuration stored in installation root · v0.0.12
+        Configuration stored in installation root · v1.0.0
       </p>
     </div>
   );

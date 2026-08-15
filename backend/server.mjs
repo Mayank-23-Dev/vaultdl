@@ -123,7 +123,7 @@ function updateYtdlp() {
 updateYtdlp();
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '0.0.12', ytdlp: ytdlpVersion });
+  res.json({ status: 'ok', version: '1.0.0', ytdlp: ytdlpVersion });
 });
 
 app.get('/api/check-update', async (req, res) => {
@@ -133,7 +133,7 @@ app.get('/api/check-update', async (req, res) => {
     if (!response.ok) throw new Error('Failed to fetch remote version');
     
     const remoteData = await response.json();
-    const currentVersion = '0.0.12';
+    const currentVersion = '1.0.0';
     const latestVersion = remoteData.version;
     
     // Simple semver-ish comparison
